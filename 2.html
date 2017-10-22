@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <title>杭州电信翼支付(Demo)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="./css/reset.css">
+  <link rel="stylesheet" type="text/css" href="./css/style.css">
+  <script type="text/javascript">
+  !function(){var e=360,t=document.documentElement.clientWidth;if(t!==e){var n=document.getElementsByTagName("head")[0],m=document.createElement("style");m.innerHTML="html{font-size:"+t/e*100+"%;}",n.appendChild(m)}}();
+  </script>
+</head>
+<body id="ctwp">
+  <div class="container">
+    <div v-for="(index,list) in lists" class="list">
+      <h1>{{list.onlyone}}</h1>
+      <h1>{{list.onlytwo}}</h1>
+      <div class="line clearfix" :class="list.line? '':'hide'">
+        <h5 class="left"></h5>
+        <h5 class="ball"></h5>
+        <h5 class="right"></h5>
+      </div>
+      <h4>{{list.question}}<span :class="list.check? '':'hide'"><span style="color:red;">*&nbsp;</span>(可多选)</span></h4>  
+      <ul>
+        <li v-for="(i,item) in lists[index].items" @click="select(index, i)">{{item.choice}}</li>
+      </ul>
+      <a class="next">
+        <img v-if="order!=24" src="./img/next.png" alt="" @click="nextQuestion(index, i)">
+         <!-- 提交问卷 -->
+        <img v-if="index==24" @click="sub(index)" src="./img/submit.png" alt="">
+      </a>
+    </div>
+  </div>
+  <!-- 最后的调查问卷 -->
+  <div class="ask hide">
+    <div class="intro">
+      <h3>规则介绍</h3>
+      <p>1.该活动仅面向杭州电信指定外翼支付红包套餐用户开展</p>
+      <p>2.其余用户填写问卷无法获得想赢话费</p>
+      <p>3.充值话费可抵扣套餐费用</p>
+    </div>
+    <div class="congra">
+      <h2>恭喜您</h2>
+      <h2>获得10元话费奖励！</h2>
+    </div>
+    <div class="phone"><input type="number" placeholder="请输入手机号码"></div>
+      <a class="sure">
+        <img src="./img/sure.png" alt="">
+      </a>
+      <img src="./img/last.png" class="last" alt="">
+  </div>
+  <!-- 进度条 -->
+  <div class="progress"> 
+   <div id="bar" style="width:4%;"></div>  
+  </div>
+  <script type="text/javascript" src="./js/jquery.min.js"></script>
+  <script src="./js/vue.js"></script>
+  <script>
+  $(document).ready(function (){
+    // 禁止触屏滚动
+    $("body").css({
+      "height": "100%",
+      "overflow": "hidden"
+    });
+    $("html").css({
+      "height": "100%",
+      "overflow": "hidden"
+    });
+    var vue = new Vue({
+        el:'#ctwp',
+        data:{
+          lists: [
+              {
+                question: "1. 您是否已经使用过翼支付红包补贴？",
+                onlyone: "杭州电信",
+                onlytwo: "翼支付调查问卷",
+                order: 0,
+                state: true,
+                check:false,
+                line: true,
+                select: undefined,
+                items: [
+                  {
+                    total: 0,
+                    orderItem: 0,
+                    choice: "是"
+                  },{
+                    total: 1,
+                    orderItem: 1,
+                    choice: "否"
+                  }
+                ]
+              },{
+                question: "2. 您的翼支付是否已经关联银行卡？",
+                order: 1,
+                state: false,
+                check:false,
+                select: undefined,
+                items: [
+                  {
+                    total: 2,
+                    orderItem: 0,
+                    choice: "是"
+                  },{
+                    total: 3,
+                    orderItem: 1,
+                    choice: "否"
+                  }
+                ]
+              },{
+                question: "3. 您的翼支付是通过什么途径绑定银行卡的？",
+                order: 2,
+                state: false,
+                turn: undefined,
+                check:false,
+                select: undefined,
+                items: [
+                  {
+                    total: 4,
+                    orderItem: 0,
+                    choice: "营业厅帮助绑卡"
+                  },{
+                    total: 5,
+                    orderItem: 1,
+                    choice: "自己操作"
+                  },{
+                    total: 6,
+                    orderItem: 2,
+                    choice: "亲朋好友指导"
+                  },{
+                    total: 7,
+                    orderItem: 3,
+                    choice: "拨打热线"
+                  },{
+                    total: 8,
+                    orderItem: 4,
+                    choice: "没有绑卡意愿至今未绑卡"
+                  },{
+                    total: 9,
+                    orderItem: 5,
+                    choice: "不知如何绑卡至今未绑卡"
+                  }
+                ]
+              },{
+                question: "4. 您绑卡意愿不大的主要原因是？",
+                order: 3,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 10,
+                    orderItem: 0,
+                    choice: "优惠力度不大"
+                  },{
+                    total: 11,
+                    orderItem: 1,
+                    choice: "可使用范围不大"
+                  },{
+                    total: 12,
+                    orderItem: 2,
+                    choice: "担心不够安全"
+                  },{
+                    total: 13,
+                    orderItem: 3,
+                    choice: "操作繁琐"
+                  },{
+                    total: 14,
+                    orderItem: 4,
+                    choice: "已绑定其他APP"
+                  },{
+                    total: 15,
+                    orderItem: 5,
+                    choice: "其他"
+                  }
+                ]
+              },{
+                question: "5. 您未进行绑卡操作的主要原因是？",
+                order: 4,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 16,
+                    orderItem: 0,
+                    choice: "营业厅办理时未给予提示"
+                  },{
+                    total: 17,
+                    orderItem: 1,
+                    choice: "营业厅办理时未帮助操作"
+                  },{
+                    total: 18,
+                    orderItem: 2,
+                    choice: " 其他渠道未提供相关操作提示"
+                  },{
+                    total: 19,
+                    orderItem: 3,
+                    choice: "拨打热线未给予相关操作提示"
+                  }
+                ]
+              },{
+                question: "6. 以下选项哪些会使您关联银行卡？",
+                order: 5,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 20,
+                    orderItem: 0,
+                    choice: "有长期不间断的活动"
+                  },{
+                    total: 21,
+                    orderItem: 1,
+                    choice: "固定活动提示渠道"
+                  },{
+                    total: 22,
+                    orderItem: 2,
+                    choice: " 系统安全性增加"
+                  },{
+                    total: 23,
+                    orderItem: 3,
+                    choice: "线下门店增加"
+                  },{
+                    total: 24,
+                    orderItem: 4,
+                    choice: "平台第三方功能增加"
+                  },{
+                    total: 25,
+                    orderItem: 5,
+                    choice: "电信付款优惠"
+                  },{
+                    total: 26,
+                    orderItem: 7,
+                    choice: "人员指导操作"
+                  }
+                ]
+              },{
+                question: "7. 您的首次翼支付消费是如何完成的？",
+                order: 6,
+                state: false,
+                check:false,
+                select: undefined,
+                items: [
+                  {
+                    total: 27,
+                    orderItem: 0,
+                    choice: "营业厅完成指导"
+                  },{
+                    total: 28,
+                    orderItem: 1,
+                    choice: "自己完成"
+                  },{
+                    total: 29,
+                    orderItem: 2,
+                    choice: "和亲朋好友体验完成"
+                  },{
+                    total: 30,
+                    orderItem: 3,
+                    choice: "太复杂暂未消费"
+                  },{
+                    total: 31,
+                    orderItem: 4,
+                    choice: "没有消费意愿"
+                  }
+                ]
+              },{
+                question: "8. 您目前使用较多的翼支付功能是？",
+                order: 7,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 32,
+                    orderItem: 0,
+                    choice: "交话费、水电等"
+                  },{
+                    total: 33,
+                    orderItem: 1,
+                    choice: "线下门店消费"
+                  },{
+                    total: 34,
+                    orderItem: 2,
+                    choice: "线上电商等消费"
+                  },{
+                    total: 35,
+                    orderItem: 3,
+                    choice: "以上都有"
+                  },{
+                    total: 36,
+                    orderItem: 4,
+                    choice: "基本不用"
+                  }
+                ]
+              },{
+                question: "9. 您目前使用翼支付的习惯是？",
+                order: 8,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 37,
+                    orderItem: 0,
+                    choice: "充值、交水电等时间使用"
+                  },{
+                    total: 38,
+                    orderItem: 1,
+                    choice: "有优惠的时候就用"
+                  },{
+                    total: 39,
+                    orderItem: 2,
+                    choice: "进入门店就使用"
+                  },{
+                    total: 40,
+                    orderItem: 3,
+                    choice: "每天都使用"
+                  },{
+                    total: 41,
+                    orderItem: 4,
+                    choice: "几乎不使用"
+                  }
+                ]
+              },{
+                question: "10. 您每周使用翼支付的金额大概是？",
+                order: 9,
+                state: false,
+                check: false,
+                select: undefined,
+                items: [
+                  {
+                    total: 42,
+                    orderItem: 0,
+                    choice: "10-20元"
+                  },{
+                    total: 43,
+                    orderItem: 1,
+                    choice: "20-50元"
+                  },{
+                    total: 44,
+                    orderItem: 2,
+                    choice: "50-100元"
+                  },{
+                    total: 45,
+                    orderItem: 3,
+                    choice: "100元以上"
+                  },{
+                    total: 46,
+                    orderItem: 4,
+                    choice: "几乎不适用"
+                  }
+                ]
+              },{
+                question: "11. 您了解翼支付半价、随机减、话费充值985折等最新活动吗？",
+                order: 10,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 47,
+                    orderItem: 0,
+                    choice: "不了解"
+                  },{
+                    total: 48,
+                    orderItem: 1,
+                    choice: "通过电信营业厅了解"
+                  },{
+                    total: 49,
+                    orderItem: 2,
+                    choice: "通过杭州114便民或其他公众号了解"
+                  },{
+                    total: 50,
+                    orderItem: 3,
+                    choice: "通过亲朋好友了解"
+                  }
+                ]
+              },{
+                question: "12. 您是通过什么途径关注“杭州114便民”公众号的？",
+                order: 11,
+                state: false,
+                check:false,
+                select: undefined,
+                items: [
+                  {
+                    total: 51,
+                    orderItem: 0,
+                    choice: "营业厅扫二维码"
+                  },{
+                    total: 52,
+                    orderItem: 1,
+                    choice: "亲朋好友"
+                  },{
+                    total: 53,
+                    orderItem: 2,
+                    choice: "其他公众号"
+                  },{
+                    total: 54,
+                    orderItem: 3,
+                    choice: "至今未关注"
+                  }
+                ]
+              },{
+                question: "13. 如果有翼支付活动您希望通过什么途径了解？",
+                order: 12,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 55,
+                    orderItem: 0,
+                    choice: "电信营业厅"
+                  },{
+                    total: 56,
+                    orderItem: 1,
+                    choice: "公众号"
+                  },{
+                    total: 57,
+                    orderItem: 2,
+                    choice: "短信"
+                  },{
+                    total: 58,
+                    orderItem: 3,
+                    choice: "邮件"
+                  },{
+                    total: 59,
+                    orderItem: 4,
+                    choice: "商户"
+                  }
+                ]
+              },{
+                question: "14. 您对翼支付内火车票、加油卡、酒店、购物等功能的感觉是？",
+                order: 13,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 60,
+                    orderItem: 0,
+                    choice: "第三方平台数量还要更多"
+                  },{
+                    total: 61,
+                    orderItem: 1,
+                    choice: "界面不够清晰易找"
+                  },{
+                    total: 62,
+                    orderItem: 2,
+                    choice: "部分活动流程太长"
+                  },{
+                    total: 63,
+                    orderItem: 3,
+                    choice: "感觉满意"
+                  },{
+                    total: 64,
+                    orderItem: 4,
+                    choice: "其他"
+                  },{
+                    total: 65,
+                    orderItem: 5,
+                    choice: "暂未使用"
+                  }
+                ]
+              },{
+                question: "15. 您认为翼支付缴费助手自动代缴话费方便吗？",
+                order: 14,
+                state: false,
+                check:false,
+                select: undefined,
+                items: [
+                  {
+                    total: 66,
+                    orderItem: 0,
+                    choice: "方便，愿意使用"
+                  },{
+                    total: 67,
+                    orderItem: 1,
+                    choice: "开通不成功，流程不通畅"
+                  },{
+                    total: 68,
+                    orderItem: 2,
+                    choice: "不知道如何查询或开通"
+                  },{
+                    total: 69,
+                    orderItem: 3,
+                    choice: "担心不安全，暂未开通"
+                  }
+                ]
+              },{
+                question: "16. 哪些翼支付甜橙理财产品对您得吸引力比较大？",
+                order: 15,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 70,
+                    orderItem: 0,
+                    choice: "活期宝新客8.88%年化收益"
+                  },{
+                    total: 71,
+                    orderItem: 1,
+                    choice: "定期宝28天起理财"
+                  },{
+                    total: 72,
+                    orderItem: 2,
+                    choice: "添益宝每天收益看得见"
+                  },{
+                    total: 73,
+                    orderItem: 3,
+                    choice: "甜橙黄金"
+                  },{
+                    total: 74,
+                    orderItem: 4,
+                    choice: "橙分期"
+                  },{
+                    total: 75,
+                    orderItem: 5,
+                    choice: "其他"
+                  }
+                ]
+              },{
+                question: "17. 您在甜橙理财过程中遇到的主要问题是？",
+                order: 16,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 76,
+                    orderItem: 0,
+                    choice: "操作过程繁琐需要辅导"
+                  },{
+                    total: 77,
+                    orderItem: 1,
+                    choice: "担心资金安全不敢操作"
+                  },{
+                    total: 78,
+                    orderItem: 2,
+                    choice: "客服问题咨询不畅通，反馈慢"
+                  },{
+                    total: 79,
+                    orderItem: 3,
+                    choice: "系统不稳定查询收益不及时"
+                  },{
+                    total: 80,
+                    orderItem: 4,
+                    choice: "感觉满意"
+                  },{
+                    total: 81,
+                    orderItem: 5,
+                    choice: "暂未使用"
+                  },{
+                    total: 82,
+                    orderItem: 6,
+                    choice: "产品或优惠太少"
+                  }
+                ]
+              },{
+                question: "18. 您在使用翼支付过程中遇到的主要问题是？",
+                order: 17,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 83,
+                    orderItem: 0,
+                    choice: "系统不稳定，充值到账不及时"
+                  },{
+                    total: 84,
+                    orderItem: 1,
+                    choice: "短信提醒不及时或有误"
+                  },{
+                    total: 85,
+                    orderItem: 2,
+                    choice: "线上第三方消费体验差"
+                  },{
+                    total: 86,
+                    orderItem: 3,
+                    choice: "线下门店不好找"
+                  },{
+                    total: 87,
+                    orderItem: 4,
+                    choice: "优惠不清楚"
+                  },{
+                    total: 88,
+                    orderItem: 5,
+                    choice: "投诉问题难处理"
+                  }
+                ]
+              },{
+                question: "19. 您在商圈门店中使用翼支付遇到的 主要问题是？",
+                order: 18,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 89,
+                    orderItem: 0,
+                    choice: "门店少"
+                  },{
+                    total: 90,
+                    orderItem: 1,
+                    choice: "没有明显的翼支付标识"
+                  },{
+                    total: 91,
+                    orderItem: 2,
+                    choice: "优惠不清楚或参加名额无法查询"
+                  },{
+                    total: 92,
+                    orderItem: 3,
+                    choice: "客户端商户定位不准确"
+                  },{
+                    total: 93,
+                    orderItem: 4,
+                    choice: "店员解释不清"
+                  },{
+                    total: 94,
+                    orderItem: 5,
+                    choice: "暂未使用"
+                  }
+                ]
+              },{
+                question: "20. 您每月的红包金额打入账户提醒及时、准确吗？",
+                order: 19,
+                state: false,
+                check: false,
+                select: undefined,
+                items: [
+                  {
+                    total: 95,
+                    orderItem: 0,
+                    choice: "及时，准确"
+                  },{
+                    total: 96,
+                    orderItem: 1,
+                    choice: "及时，不准确"
+                  },{
+                    total: 97,
+                    orderItem: 2,
+                    choice: "不及时，准确"
+                  },{
+                    total: 98,
+                    orderItem: 3,
+                    choice: "不及时，不准确"
+                  }
+                ]
+              },{
+                question: "21. 您消费或充值后翼支付提醒及时、准确吗？",
+                order: 20,
+                state: false,
+                check:false,
+                select: undefined,
+                items: [
+                  {
+                    total: 99,
+                    orderItem: 0,
+                    choice: "及时，准确"
+                  },{
+                    total: 100,
+                    orderItem: 1,
+                    choice: "及时，不准确"
+                  },{
+                    total: 101,
+                    orderItem: 2,
+                    choice: "不及时，准确"
+                  },{
+                    total: 102,
+                    orderItem: 3,
+                    choice: "不及时，不准确"
+                  }
+                ]
+              },{
+                question: "22. 您觉得翼支付与支付宝、微信的主要差距在于？",
+                order: 21,
+                state: false,
+                check:true,
+                select: undefined,
+                items: [
+                  {
+                    total: 103,
+                    orderItem: 0,
+                    choice: "系统不太稳定"
+                  },{
+                    total: 104,
+                    orderItem: 1,
+                    choice: "流程不够便捷"
+                  },{
+                    total: 105,
+                    orderItem: 2,
+                    choice: "担心安全性"
+                  },{
+                    total: 106,
+                    orderItem: 3,
+                    choice: "线下可使用门店少"
+                  },{
+                    total: 107,
+                    orderItem: 4,
+                    choice: "优惠力度不够"
+                  },{
+                    total: 108,
+                    orderItem: 5,
+                    choice: "功能少"
+                  },{
+                    total: 109,
+                    orderItem: 6,
+                    choice: "感觉满意"
+                  }
+                ]
+              },{
+                question: "23. 如果您的电信积分可以兑换翼支付金，您的兑换意愿是？（5-1分由高到低）",
+                order: 13,
+                state: false,
+                check: false,
+                select: undefined,
+                items: [
+                  {
+                    total: 110,
+                    orderItem: 0,
+                    choice: "5分"
+                  },{
+                    total: 111,
+                    orderItem: 1,
+                    choice: "4分"
+                  },{
+                    total: 112,
+                    orderItem: 2,
+                    choice: "3分"
+                  },{
+                    total: 113,
+                    orderItem: 3,
+                    choice: "2分"
+                  },{
+                    total: 114,
+                    orderItem: 4,
+                    choice: "1分"
+                  }
+                ]
+              },{
+                question: "24. 您对翼支付的打分是？",
+                order: 23,
+                state: false,
+                check: false,
+                select: undefined,
+                items: [
+                  {
+                    total: 115,
+                    orderItem: 0,
+                    choice: "5分（非常满意）"
+                  },{
+                    total: 116,
+                    orderItem: 1,
+                    choice: "4分（满意）"
+                  },{
+                    total: 117,
+                    orderItem: 2,
+                    choice: "3分（一般）"
+                  },{
+                    total: 118,
+                    orderItem: 3,
+                    choice: "2分（不满意）"
+                  },{
+                    total: 119,
+                    orderItem: 4,
+                    choice: "1分（非常不满意）"
+                  }
+                ]
+              },{
+                question: "25. 您愿意向身边的人推荐翼支付吗？（0-10分根据推荐意愿由低到高）",
+                order: 24,
+                state: false,
+                check:true,
+                select: undefined,
+                last: true,
+                items: [
+                  {
+                    total: 120,
+                    orderItem: 0,
+                    choice: "0"
+                  },{
+                    total: 121,
+                    orderItem: 1,
+                    choice: "1"
+                  },{
+                    total: 122,
+                    orderItem: 2,
+                    choice: "2"
+                  },{
+                    total: 123,
+                    orderItem: 3,
+                    choice: "3"
+                  },{
+                    total: 124,
+                    orderItem: 4,
+                    choice: "4"
+                  },{
+                    total: 125,
+                    orderItem: 5,
+                    choice: "5"
+                  }
+                ]
+              }
+            ]
+        },
+        externals: {
+          jquery: 'window.$'
+        },
+        methods: {
+          select: function (index, i){
+            var self = this;
+            var state1 = undefined;//记录多选时，选中再选就不要
+            var aa = self.lists[index].items[i].total;
+            // 选中第9个还是第10个
+            if(aa == 9){
+              self.lists[index].turn = true;
+            }else{
+              self.lists[index].turn = false;
+            }
+            // 多选还是单选
+            if(self.lists[index].check == true){
+              if(($('li')[aa].className)) {
+                  $('li')[aa].classList.remove("active");
+                } else {
+                  $('li')[aa].classList.add("active");
+                }
+            } else {
+              $('li').removeClass("active");
+              $('li')[aa].classList.add("active");
+            }
+            // 有选中的，不是空白
+            self.lists[index].state = true;
+          },
+          nextQuestion: function (index) {
+            var $ = window.$;
+            var bar = document.getElementById("bar");
+            var self = this;
+
+            if(self.lists[index].state){
+              if(self.lists[index].order == 23) {
+                  $(".next img:first-child").hide();
+                  $(".list")[index].style.display = "none";
+                  $(".next .other").show();
+                }
+              // 进度条
+              bar.style.width = parseInt(bar.style.width) + 4 + "%";
+              if(bar.style.width == "100%"){   
+                $(".progress").hide();
+              } 
+              $(".list")[index].style.display="none";
+              // 记录是选择9还是选择10 
+              if(self.lists[index].turn){
+                $(".list")[++index].style.display="none";
+              }else{
+                $(".list")[index].style.display="none";
+              }  
+            }else{
+              alert("亲，您还没选择哦！");
+            }
+          },
+          sub: function (){
+
+            $(".container").hide();
+            $(".ask").show();
+
+          }         
+        }
+      })
+    })  
+      
+  </script>
+</body>
+</html>
