@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+		<title>杭州电信翼支付(Demo)</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./css/reset.css">
+		<link rel="stylesheet" type="text/css" href="./css/style.css">
+		<script type="text/javascript">
+			! function() {
+				var e = 360,
+					t = document.documentElement.clientWidth;
+				if(t !== e) {
+					var n = document.getElementsByTagName("head")[0],
+						m = document.createElement("style");
+					m.innerHTML = "html{font-size:" + t / e * 100 + "%;}", n.appendChild(m)
+				}
+			}();
+		</script>
+	</head>
+
+	<body id="ctwp">
+		<div class="container">
+			<div v-for="(index,list) in lists" class="list">
+				<h1>{{list.onlyone}}</h1>
+				<h1>{{list.onlytwo}}</h1>
+				<div class="line clearfix" :class="list.line? '':'hide'">
+					<h5 class="left"></h5>
+					<h5 class="ball"></h5>
+					<h5 class="right"></h5>
+				</div>
+				<h4 :class="[list.id == 1? 'pt':'']">{{index+1}}、{{list.title}}</h4>
+				<ul class="view" v-if="index!=24">
+					<li v-for="(i,option) in lists[index].options" :id="option.id" @click="select(index,list.type, i)">{{option.title}}</li>
+				</ul>
+				<ul class="view views clearfix" v-if="index==24">
+					<li v-for="(i,option) in lists[index].options" :id="option.id" @click="select(index,list.type, i)">{{option.title}}</li>
+				</ul>
+				<a class="next">
+					<img v-if="index!=24" src="./img/next.png" alt="" @click="nextQuestion(index)">
+					<!-- 提交问卷 -->
+					<img v-if="index==24" src="./img/submit.png" alt="" class="other" @click="sub(index)">
+				</a>
+			</div>
+		</div>
+		<!-- 遮罩 -->
+		<div class="shade hide"></div>
+		<!-- 弹出框 -->
+		<div class="warning hide">
+			<h2>亲，您还没选择哦！</h2>
+			<div>确定</div>
+		</div>
+		<!-- 最后的调查问卷 -->
+		<div class="ask hide">
+			<div class="intro">
+				<h3>规则介绍</h3>
+				<p>1.该活动仅面向杭州电信指定外翼支付红包套餐用户开展</p>
+				<p>2.其余用户填写问卷无法获得想赢话费</p>
+				<p>3.充值话费可抵扣套餐费用</p>
+			</div>
+			<div class="congra">
+				<h2>恭喜您</h2>
+				<h2>获得10元话费奖励！</h2>
+			</div>
+			<div class="numerr">手机号输入错误!</div>
+			<div class="phone"><input type="number" placeholder="请输入手机号码"></div>
+			<a class="sure">
+				<img src="./img/sure.png" alt="">
+			</a>
+			<img src="./img/last.png" class="last" alt="">
+		</div>
+		<!-- 进度条 -->
+		<div class="progress">
+			<div id="bar" style="width:8%;"></div>
+		</div>
+		<script type="text/javascript" src="./js/jquery.min.js"></script>
+		<script src="./js/vue.js"></script>
+		<script>
+			$(document).ready(function() {
+				// 禁止触屏滚动
+				$("body").css({
+					"height": "100%",
+					"overflow": "hidden"
+				});
+				$("html").css({
+					"height": "100%",
+					"overflow": "hidden"
+				});
+
+				var vue = new Vue({
+					el: '#ctwp',
+					data: {
+						lists: [],//盛放后台传递过来的页面数据
+						ls: '',//后台数据解析后
+						now: [],
+						ischange: false,//是否选中选项，选择后才能跳转下一题
+						selects: [],//返回给后台的用户选择
+						checkarr: '',//type为2时，复选框选择的元素
+					},
+					externals: {
+						jquery: 'window.$'
+					},
+					created: function() {
+						var _this = this;
+						$.ajax({
+							type: "GET",
+							url: "http://luck.pengsuplus.cn/welcome/getQuestions",
+							dataType: "json",
+							data: {},
+							success: function(data) {
+								_this.lists = data.desc;
+								_this.lists[0]['onlyone'] = "杭州电信";
+								_this.lists[0]['onlytwo'] = "翼支付调查问卷";
+								_this.lists[0]['line'] = true;
+								_this.ls = JSON.stringify(data.desc);//从一个json对象解析为字符串
+							}
+						});
+					},
+					methods: {
+						select: function(index, type, it) {
+							// console.log(index, type, it);
+							//		0           "1"     			1
+							//第几个问题		单选是1,多选是2  第几个选项
+							var _this = this;
+							if(index == 0) {
+								i = it;
+							} else {
+								var nowi = 0;// title的id
+								for(var i = 0; i < index; i++) {
+									nowi += _this.lists[index - i - 1].options.length;//目前的标题选项已经加到的数字
+								}
+								i = nowi + it;//i是所有的选项排序,从0开始
+							}
+							// 多选还是单选
+							if(type == 2) {
+								// 多选可以取消已经选中的
+								if(($('li')[i].className)) {
+									$('li')[i].classList.remove("active");
+								} else {
+									$('li')[i].classList.add("active");
+								}
+								_this.checkarr += $('li')[i].id + ',';
+								_this.now[0] = _this.checkarr.substring(0, _this.checkarr.length - 1)
+							} else {
+								$('li').removeClass("active");
+								$('li')[i].classList.add("active");
+								_this.now = [];
+								_this.now.push($('li')[i].id);
+							}
+							_this.ischange = true;
+						},
+						nextQuestion: function(index, i) {
+							var $ = window.$;
+							var _this = this;
+							var bar = document.getElementById("bar");
+							var ischange = _this.ischange;
+							if(ischange) {
+								// 进度条
+								if(bar.style.width == "100%") {
+									$(".progress").hide();
+								}
+								var oldselect = _this.selects;
+								_this.selects = oldselect.concat(_this.now);
+								if(_this.lists[index].id == 23) {
+									$(".next img:first-child").hide();
+									$(".list")[index].style.display = "none";
+									$(".next .other").show();
+								}
+								if(_this.now == 9 || _this.now == 161 || _this.now == 162 || _this.now == 163 || _this.now == 164 || _this.now == 165 || _this.now == 166) {
+									$(".list")[index].style.display = "none";
+									$(".list")[index + 1].style.display = "none";
+									bar.style.width = parseInt(bar.style.width) + 8 + "%";
+									_this.selects.push('');
+								} else if (_this.now == 5 || _this.now == 6 || _this.now == 7 || _this.now == 138){
+									$(".list")[index].style.display = "none";
+									$(".list")[index + 1].style.display = "none";
+									$(".list")[index + 2].style.display = "none";
+									$(".list")[index + 3].style.display = "none";
+									bar.style.width = parseInt(bar.style.width) + 16 + "%";
+									_this.selects.push('');
+									_this.selects.push('');
+									_this.selects.push('');
+								} else {
+									$(".list")[index].style.display = "none";
+									bar.style.width = parseInt(bar.style.width) + 4 + "%";
+								}
+								_this.checkarr = '';//多选项重置
+								_this.ischange = false;//下一题选项是否选中状态重置
+							} else {
+								$(".shade").show();
+								$(".warning").show();
+								$(".warning div").click(function (){
+									$(".warning").hide();
+									$(".shade").hide();
+								})
+							}
+						},
+						sub: function() {
+							$(".container").hide();
+							$(".ask").show();
+							var _this = this;
+							var oldselect = _this.selects;
+							_this.selects = oldselect.concat(_this.now);
+							var reg = /^1[34578]\d{9}$/;
+							$(".sure").click(function() {
+								if(reg.test($(".ask .phone input").val())) {
+									$.ajax({
+										url: "http://luck.pengsuplus.cn/welcome/vote",
+										type: "POST",
+										data: {
+											'mobile': $(".ask .phone input").val(),
+											'question': _this.selects
+										},
+										dataType: "json",
+										success: function(data) {
+											console.log(data)
+										}
+									});
+								} else {
+									$(".numerr").css("visibility","visible");
+								}
+							})
+						}
+					}
+				})
+			})
+		</script>
+	</body>
+
+</html>
