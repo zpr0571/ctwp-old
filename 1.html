@@ -119,8 +119,8 @@
 					methods: {
 						select: function(index, type, it) {
 							// console.log(index, type, it);
-							//    0              "1"     		 1
-							//第几个问题	    单选是1,多选是2  	    第几个选项
+							//		0           "1"     			1
+							//第几个问题		单选是1,多选是2  第几个选项
 							var _this = this;
 							if(index == 0) {
 								i = it;
@@ -165,6 +165,7 @@
 									$(".next img:first-child").hide();
 									$(".list")[index].style.display = "none";
 									$(".next .other").show();
+									var state1 = false;
 								}
 								if(_this.now == 9 || _this.now == 161 || _this.now == 162 || _this.now == 163 || _this.now == 164 || _this.now == 165 || _this.now == 166) {
 									$(".list")[index].style.display = "none";
@@ -196,30 +197,43 @@
 							}
 						},
 						sub: function() {
-							$(".container").hide();
-							$(".ask").show();
+							
 							var _this = this;
+							var ischange = _this.ischange;
 							var oldselect = _this.selects;
-							_this.selects = oldselect.concat(_this.now);
 							var reg = /^1[34578]\d{9}$/;
-							$(".sure").click(function() {
-								if(reg.test($(".ask .phone input").val())) {
-									$.ajax({
-										url: "http://luck.pengsuplus.cn/welcome/vote",
-										type: "POST",
-										data: {
-											'mobile': $(".ask .phone input").val(),
-											'question': _this.selects
-										},
-										dataType: "json",
-										success: function(data) {
-											console.log(data)
-										}
-									});
-								} else {
-									$(".numerr").css("visibility","visible");
-								}
-							})
+							if(ischange){
+								$(".container").hide();
+								$(".ask").show();
+								_this.selects = oldselect.concat(_this.now);
+								$(".sure").click(function() {
+									if(reg.test($(".ask .phone input").val())) {
+										$.ajax({
+											url: "http://luck.pengsuplus.cn/welcome/vote",
+											type: "POST",
+											data: {
+												'mobile': $(".ask .phone input").val(),
+												'question': _this.selects
+											},
+											dataType: "json",
+											success: function(data) {
+												console.log(data)
+											}
+										});
+									} else {
+										$(".numerr").css("visibility","visible");
+									}
+								})
+								_this.ischange = false;
+							}else{
+								$(".shade").show();
+								$(".warning").show();
+								$(".warning div").click(function (){
+									$(".warning").hide();
+									$(".shade").hide();
+								})
+							}
+							
 						}
 					}
 				})
